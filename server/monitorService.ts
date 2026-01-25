@@ -38,9 +38,30 @@ export async function fetchFlightPrices(): Promise<FlightPrice[]> {
     const $ = cheerio.load(response.data);
     const prices: FlightPrice[] = [];
 
-    // Strategy 1: Parse from aria-label attributes on buttons
-    console.log("[MonitorService] Parsing from aria-label attributes...");
-    $('button[role="gridcell"]').each((_, element) => {
+    // Strategy 1: Extract from SvelteKit data (embedded JSON in script tags)
+    console.log("[MonitorService] Parsing from SvelteKit data...");
+    const scriptContent = response.data;
+    
+    // Look for pattern: date:"2026-02-01",price:18.1,awardPoints:175000
+    const dataMatches = scriptContent.matchAll(/date:"([^"]+)",price:([\d.]+|null),awardPoints:(\d+|null)/g);
+    
+    for (const match of dataMatches) {
+      const [, date, priceStr, awardPointsStr] = match;
+      if (priceStr !== 'null' && awardPointsStr !== 'null') {
+        prices.push({
+          date,
+          miles: parseInt(awardPointsStr),
+          fees: Math.round(parseFloat(priceStr)),
+        });
+      }
+    }
+    
+    console.log(`[MonitorService] SvelteKit parsing found ${prices.length} prices`);
+
+    // Strategy 2: Parse from aria-label attributes on buttons (fallback)
+    if (prices.length === 0) {
+      console.log("[MonitorService] Trying aria-label parsing...");
+      $('button[role="gridcell"]').each((_, element) => {
       const ariaLabel = $(element).attr("aria-label");
       if (!ariaLabel) return;
 
@@ -74,9 +95,10 @@ export async function fetchFlightPrices(): Promise<FlightPrice[]> {
       const fees = parseInt(feesStr);
 
       prices.push({ date, miles, fees });
-    });
+      });
+    }
 
-    // Strategy 2: Parse from text content if aria-label parsing didn't work
+    // Strategy 3: Parse from text content if other methods didn't work
     if (prices.length === 0) {
       console.log(
         "[MonitorService] Aria-label parsing found no prices, trying text content..."
