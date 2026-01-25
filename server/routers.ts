@@ -17,12 +17,37 @@ export const appRouter = router({
     }),
   }),
 
-  // TODO: add feature routers here, e.g.
-  // todo: router({
-  //   list: protectedProcedure.query(({ ctx }) =>
-  //     db.getUserTodos(ctx.user.id)
-  //   ),
-  // }),
+  monitor: router({
+    // Get latest flight prices
+    getLatestPrices: publicProcedure.query(async () => {
+      const { getLatestPrices } = await import("./queries");
+      return await getLatestPrices();
+    }),
+
+    // Get recent monitor logs
+    getRecentLogs: publicProcedure.query(async () => {
+      const { getRecentLogs } = await import("./queries");
+      return await getRecentLogs(50);
+    }),
+
+    // Get all notifications
+    getNotifications: publicProcedure.query(async () => {
+      const { getAllNotifications } = await import("./queries");
+      return await getAllNotifications(50);
+    }),
+
+    // Get monitoring statistics
+    getStats: publicProcedure.query(async () => {
+      const { getMonitorStats } = await import("./queries");
+      return await getMonitorStats();
+    }),
+
+    // Manually trigger a monitoring check
+    runCheck: publicProcedure.mutation(async () => {
+      const { runMonitoring } = await import("./monitorService");
+      return await runMonitoring();
+    }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;
