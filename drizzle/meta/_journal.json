@@ -15,6 +15,13 @@
       "when": 1769378633074,
       "tag": "0001_happy_wendell_rand",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1769379038592,
+      "tag": "0002_graceful_beast",
+      "breakpoints": true
     }
   ]
 }

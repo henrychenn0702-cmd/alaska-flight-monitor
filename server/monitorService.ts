@@ -3,11 +3,10 @@ import * as cheerio from "cheerio";
 import { getDb } from "./db";
 import { priceRecords, monitorLogs, notifications } from "../drizzle/schema";
 import { notifyOwner } from "./_core/notification";
+import { getActiveFilters } from "./filterService";
 
 const ALASKA_URL =
   "https://www.alaskaair.com/search/calendar?O=SA2&D=TPE&OD=2026-02-01&A=1&RT=false&RequestType=Calendar&int=flightresultsmicrosite%3Aviewby-calendar&locale=en-us&ShoppingMethod=onlineaward&FareType=Partner+Business&CM=2026-02&DD=2026-02-01";
-
-const TARGET_MILES = 75000;
 
 interface FlightPrice {
   date: string;
@@ -103,20 +102,49 @@ export async function savePriceRecords(prices: FlightPrice[]): Promise<void> {
 }
 
 /**
- * Check for 75k deals and send notifications
+ * Check for deals matching active filters and send notifications
  */
 export async function checkForDeals(
   prices: FlightPrice[]
 ): Promise<{ found: boolean; dates: string[] }> {
-  const dealDates = prices
-    .filter((p) => p.miles === TARGET_MILES)
-    .map((p) => p.date);
+  const activeFilters = await getActiveFilters();
+
+  if (activeFilters.length === 0) {
+    console.log("[MonitorService] No active filters configured");
+    return { found: false, dates: [] };
+  }
+
+  const dealDates: string[] = [];
+  const dealsByFilter: Record<number, string[]> = {};
+
+  // Group deals by filter
+  for (const filter of activeFilters) {
+    const matchingDates = prices
+      .filter((p) => p.miles === filter.targetMiles)
+      .map((p) => p.date);
+
+    if (matchingDates.length > 0) {
+      dealsByFilter[filter.targetMiles] = matchingDates;
+      dealDates.push(...matchingDates);
+    }
+  }
 
   if (dealDates.length > 0) {
-    const title = "🎉 75k 特價里程票發現!";
-    const content = `發現 ${dealDates.length} 個 75k 特價里程票:\n\n${dealDates
-      .map((d) => `• ${d}`)
-      .join("\n")}\n\n立即前往阿拉斯加航空預訂!`;
+    // Build notification content
+    let content = "🎉 發現特價里程票!\n\n";
+    for (const filter of activeFilters) {
+      const dates = dealsByFilter[filter.targetMiles];
+      if (dates && dates.length > 0) {
+        content += `${filter.description || `${filter.targetMiles / 1000}k 里程票`}:\n`;
+        dates.forEach((d) => {
+          content += `  • ${d}\n`;
+        });
+        content += "\n";
+      }
+    }
+    content += "立即前往阿拉斯加航空預訂!";
+
+    const title = "🎉 特價里程票發現!";
 
     try {
       const success = await notifyOwner({ title, content });

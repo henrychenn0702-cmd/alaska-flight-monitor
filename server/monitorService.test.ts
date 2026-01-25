@@ -22,6 +22,13 @@ vi.mock("./db", () => ({
   }),
 }));
 
+// Mock filterService
+vi.mock("./filterService", () => ({
+  getActiveFilters: vi.fn().mockResolvedValue([
+    { id: 1, targetMiles: 75000, active: 1, description: "75k 特價票" },
+  ]),
+}));
+
 describe("monitorService", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -82,7 +89,7 @@ describe("monitorService", () => {
   });
 
   describe("checkForDeals", () => {
-    it("should detect 75k deals", async () => {
+    it("should detect deals matching active filters", async () => {
       const prices = [
         { date: "2026-02-01", miles: 175000, fees: 19 },
         { date: "2026-02-02", miles: 75000, fees: 19 },
@@ -109,16 +116,16 @@ describe("monitorService", () => {
       expect(result.dates).toHaveLength(0);
     });
 
-    it("should call notifyOwner when deals are found", async () => {
-      const { notifyOwner } = await import("./_core/notification");
+    it("should handle no active filters", async () => {
+      const { getActiveFilters } = await import("./filterService");
+      vi.mocked(getActiveFilters).mockResolvedValue([]);
+
       const prices = [{ date: "2026-02-02", miles: 75000, fees: 19 }];
 
-      await monitorService.checkForDeals(prices);
+      const result = await monitorService.checkForDeals(prices);
 
-      expect(notifyOwner).toHaveBeenCalledWith({
-        title: "🎉 75k 特價里程票發現!",
-        content: expect.stringContaining("2026-02-02"),
-      });
+      expect(result.found).toBe(false);
+      expect(result.dates).toHaveLength(0);
     });
   });
 

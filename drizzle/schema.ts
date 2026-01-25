@@ -82,3 +82,23 @@ export const notifications = mysqlTable("notifications", {
 
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = typeof notifications.$inferInsert;
+
+/**
+ * Filter settings table - stores user's custom price filter preferences
+ */
+export const filterSettings = mysqlTable("filterSettings", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Target miles price to monitor (e.g., 75000, 100000) */
+  targetMiles: int("targetMiles").notNull(),
+  /** Whether this filter is active */
+  active: int("active").default(1).notNull(),
+  /** Optional description for this filter */
+  description: text("description"),
+  /** Timestamp when this filter was created */
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  /** Timestamp when this filter was last updated */
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FilterSetting = typeof filterSettings.$inferSelect;
+export type InsertFilterSetting = typeof filterSettings.$inferInsert;

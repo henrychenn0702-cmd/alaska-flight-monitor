@@ -4,12 +4,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plane, RefreshCw, Calendar, TrendingDown, Bell, Activity, CheckCircle2, XCircle, Sparkles } from "lucide-react";
+import { Plane, RefreshCw, Calendar, TrendingDown, Bell, Activity, CheckCircle2, XCircle, Sparkles, Sliders } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
+import { useLocation } from "wouter";
 
 export default function Home() {
   const [isChecking, setIsChecking] = useState(false);
+  const [, navigate] = useLocation();
   const utils = trpc.useUtils();
 
   // Fetch data
@@ -94,15 +96,26 @@ export default function Home() {
                 <p className="text-sm text-muted-foreground">SEA → TPE · 2026年2月 · Partner Business</p>
               </div>
             </div>
-            <Button
-              onClick={handleManualCheck}
-              disabled={isChecking}
-              size="lg"
-              className="gap-2"
-            >
-              <RefreshCw className={`w-4 h-4 ${isChecking ? "animate-spin" : ""}`} />
-              {isChecking ? "檢查中..." : "立即檢查"}
-            </Button>
+            <div className="flex gap-3">
+              <Button
+                onClick={handleManualCheck}
+                disabled={isChecking}
+                size="lg"
+                className="gap-2"
+              >
+                <RefreshCw className={`w-4 h-4 ${isChecking ? "animate-spin" : ""}`} />
+                {isChecking ? "檢查中..." : "立即檢查"}
+              </Button>
+              <Button
+                onClick={() => navigate("/filters")}
+                variant="outline"
+                size="lg"
+                className="gap-2"
+              >
+                <Sliders className="w-4 h-4" />
+                篩選器設定
+              </Button>
+            </div>
           </div>
         </div>
       </header>
