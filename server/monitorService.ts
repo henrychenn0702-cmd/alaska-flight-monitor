@@ -16,9 +16,12 @@ interface FlightPrice {
 
 /**
  * Fetch and parse Alaska Airlines award calendar page
+ * Tries multiple parsing strategies to handle dynamic content
  */
 export async function fetchFlightPrices(): Promise<FlightPrice[]> {
   try {
+    console.log("[MonitorService] Fetching Alaska Airlines calendar...");
+
     const response = await axios.get(ALASKA_URL, {
       headers: {
         "User-Agent":
@@ -26,6 +29,7 @@ export async function fetchFlightPrices(): Promise<FlightPrice[]> {
         Accept:
           "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
         "Accept-Language": "en-US,en;q=0.5",
+        "Cache-Control": "no-cache",
       },
       timeout: 30000,
     });
@@ -33,7 +37,8 @@ export async function fetchFlightPrices(): Promise<FlightPrice[]> {
     const $ = cheerio.load(response.data);
     const prices: FlightPrice[] = [];
 
-    // Find all date buttons with aria-label containing fare information
+    // Strategy 1: Parse from aria-label attributes on buttons
+    console.log("[MonitorService] Parsing from aria-label attributes...");
     $('button[role="gridcell"]').each((_, element) => {
       const ariaLabel = $(element).attr("aria-label");
       if (!ariaLabel) return;
@@ -69,6 +74,67 @@ export async function fetchFlightPrices(): Promise<FlightPrice[]> {
 
       prices.push({ date, miles, fees });
     });
+
+    // Strategy 2: Parse from text content if aria-label parsing didn't work
+    if (prices.length === 0) {
+      console.log("[MonitorService] Aria-label parsing found no prices, trying text content...");
+      
+      $('button[role="gridcell"]').each((_, element) => {
+        const text = $(element).text();
+        const ariaLabel = $(element).attr("aria-label");
+
+        // Try to extract from text like "1 175k +$19"
+        const textMatch = text.match(/(\d+)\s+(\d+)k\s+\+\$(\d+)/);
+        const labelMatch = ariaLabel?.match(
+          /([A-Za-z]+)\s+(\d+),\s+(\d{4})/
+        );
+
+        if (textMatch && labelMatch) {
+          const [, , milesStr, feesStr] = textMatch;
+          const [, month, day, year] = labelMatch;
+
+          const monthMap: Record<string, string> = {
+            Jan: "01",
+            Feb: "02",
+            Mar: "03",
+            Apr: "04",
+            May: "05",
+            Jun: "06",
+            Jul: "07",
+            Aug: "08",
+            Sep: "09",
+            Oct: "10",
+            Nov: "11",
+            Dec: "12",
+          };
+
+          const monthNum = monthMap[month];
+          if (!monthNum) return;
+
+          const date = `${year}-${monthNum}-${day.padStart(2, "0")}`;
+          const miles = parseInt(milesStr) * 1000;
+          const fees = parseInt(feesStr);
+
+          // Check if this price already exists
+          const exists = prices.some(
+            (p) => p.date === date && p.miles === miles
+          );
+          if (!exists) {
+            prices.push({ date, miles, fees });
+          }
+        }
+      });
+    }
+
+    console.log(`[MonitorService] Extracted ${prices.length} flight prices`);
+    
+    // Log sample prices for debugging
+    if (prices.length > 0) {
+      console.log(
+        "[MonitorService] Sample prices:",
+        prices.slice(0, 3).map((p) => `${p.date}: ${p.miles / 1000}k`)
+      );
+    }
 
     return prices;
   } catch (error) {
@@ -126,6 +192,9 @@ export async function checkForDeals(
     if (matchingDates.length > 0) {
       dealsByFilter[filter.targetMiles] = matchingDates;
       dealDates.push(...matchingDates);
+      console.log(
+        `[MonitorService] Found ${matchingDates.length} deals for ${filter.targetMiles / 1000}k`
+      );
     }
   }
 
