@@ -102,3 +102,23 @@ export const filterSettings = mysqlTable("filterSettings", {
 
 export type FilterSetting = typeof filterSettings.$inferSelect;
 export type InsertFilterSetting = typeof filterSettings.$inferInsert;
+
+/**
+ * Email recipients table - stores multiple email addresses for notifications
+ */
+export const emailRecipients = mysqlTable("emailRecipients", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Email address to send notifications to */
+  email: varchar("email", { length: 320 }).notNull().unique(),
+  /** Whether this recipient is active */
+  active: int("active").default(1).notNull(),
+  /** Optional name/label for this recipient */
+  name: text("name"),
+  /** Timestamp when this recipient was added */
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  /** Timestamp when this recipient was last updated */
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type EmailRecipient = typeof emailRecipients.$inferSelect;
+export type InsertEmailRecipient = typeof emailRecipients.$inferInsert;

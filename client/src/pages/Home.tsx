@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plane, RefreshCw, Calendar, TrendingDown, Bell, Activity, CheckCircle2, XCircle, Sparkles, Sliders } from "lucide-react";
+import { Plane, RefreshCw, Calendar, TrendingDown, Bell, Activity, CheckCircle2, XCircle, Sparkles, Sliders, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 import { useLocation } from "wouter";
@@ -114,6 +114,15 @@ export default function Home() {
               >
                 <Sliders className="w-4 h-4" />
                 篩選器設定
+              </Button>
+              <Button
+                onClick={() => navigate("/recipients")}
+                variant="outline"
+                size="lg"
+                className="gap-2"
+              >
+                <Mail className="w-4 h-4" />
+                收件人設定
               </Button>
             </div>
           </div>

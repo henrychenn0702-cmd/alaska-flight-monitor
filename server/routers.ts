@@ -43,6 +43,49 @@ export const appRouter = router({
     }),
   }),
 
+  recipients: router({
+    getAll: publicProcedure.query(async () => {
+      const { getAllRecipients } = await import("./recipientService");
+      return await getAllRecipients();
+    }),
+
+    add: publicProcedure
+      .input((val: unknown) => {
+        if (typeof val !== "object" || val === null) throw new Error("Invalid input");
+        const obj = val as Record<string, unknown>;
+        return {
+          email: obj.email as string,
+          name: (obj.name as string | undefined) || undefined,
+        };
+      })
+      .mutation(async ({ input }) => {
+        const { addRecipient } = await import("./recipientService");
+        return await addRecipient(input.email, input.name);
+      }),
+
+    remove: publicProcedure
+      .input((val: unknown) => {
+        if (typeof val !== "object" || val === null) throw new Error("Invalid input");
+        const obj = val as Record<string, unknown>;
+        return { id: obj.id as number };
+      })
+      .mutation(async ({ input }) => {
+        const { removeRecipient } = await import("./recipientService");
+        return await removeRecipient(input.id);
+      }),
+
+    toggle: publicProcedure
+      .input((val: unknown) => {
+        if (typeof val !== "object" || val === null) throw new Error("Invalid input");
+        const obj = val as Record<string, unknown>;
+        return { id: obj.id as number };
+      })
+      .mutation(async ({ input }) => {
+        const { toggleRecipient } = await import("./recipientService");
+        return await toggleRecipient(input.id);
+      }),
+  }),
+
   filters: router({
     getActive: publicProcedure.query(async () => {
       const { getActiveFilters } = await import("./filterService");

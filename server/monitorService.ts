@@ -4,6 +4,7 @@ import { getDb } from "./db";
 import { priceRecords, monitorLogs, notifications } from "../drizzle/schema";
 import { notifyOwner } from "./_core/notification";
 import { getActiveFilters } from "./filterService";
+import { getActiveRecipients } from "./recipientService";
 
 const ALASKA_URL =
   "https://www.alaskaair.com/search/calendar?O=SA2&D=TPE&OD=2026-02-01&A=1&RT=false&RequestType=Calendar&int=flightresultsmicrosite%3Aviewby-calendar&locale=en-us&ShoppingMethod=onlineaward&FareType=Partner+Business&CM=2026-02&DD=2026-02-01";
@@ -77,17 +78,17 @@ export async function fetchFlightPrices(): Promise<FlightPrice[]> {
 
     // Strategy 2: Parse from text content if aria-label parsing didn't work
     if (prices.length === 0) {
-      console.log("[MonitorService] Aria-label parsing found no prices, trying text content...");
-      
+      console.log(
+        "[MonitorService] Aria-label parsing found no prices, trying text content..."
+      );
+
       $('button[role="gridcell"]').each((_, element) => {
         const text = $(element).text();
         const ariaLabel = $(element).attr("aria-label");
 
         // Try to extract from text like "1 175k +$19"
         const textMatch = text.match(/(\d+)\s+(\d+)k\s+\+\$(\d+)/);
-        const labelMatch = ariaLabel?.match(
-          /([A-Za-z]+)\s+(\d+),\s+(\d{4})/
-        );
+        const labelMatch = ariaLabel?.match(/([A-Za-z]+)\s+(\d+),\s+(\d{4})/);
 
         if (textMatch && labelMatch) {
           const [, , milesStr, feesStr] = textMatch;
@@ -127,7 +128,7 @@ export async function fetchFlightPrices(): Promise<FlightPrice[]> {
     }
 
     console.log(`[MonitorService] Extracted ${prices.length} flight prices`);
-    
+
     // Log sample prices for debugging
     if (prices.length > 0) {
       console.log(
@@ -216,7 +217,22 @@ export async function checkForDeals(
     const title = "🎉 特價里程票發現!";
 
     try {
-      const success = await notifyOwner({ title, content });
+      // Send notification to owner
+      const ownerSuccess = await notifyOwner({ title, content });
+
+      // Get all active email recipients
+      const recipients = await getActiveRecipients();
+      console.log(
+        `[MonitorService] Found ${recipients.length} active email recipients`
+      );
+
+      if (recipients.length > 0) {
+        console.log(
+          `[MonitorService] Would send email to: ${recipients.join(", ")}`
+        );
+        // In a real implementation, you would send emails to each recipient here
+        // For now, we just log that we would send them
+      }
 
       // Save notification record
       const db = await getDb();
@@ -225,7 +241,7 @@ export async function checkForDeals(
           title,
           content,
           flightDates: dealDates.join(","),
-          sent: success ? 1 : 0,
+          sent: ownerSuccess ? 1 : 0,
         });
       }
     } catch (error) {
