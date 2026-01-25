@@ -19,6 +19,7 @@ export default function Home() {
   const { data: prices, isLoading: pricesLoading } = trpc.monitor.getLatestPrices.useQuery();
   const { data: logs, isLoading: logsLoading } = trpc.monitor.getRecentLogs.useQuery();
   const { data: notifications } = trpc.monitor.getNotifications.useQuery();
+  const { data: dealsByFilter } = trpc.monitor.getDealsByFilter.useQuery();
 
   // Manual check mutation
   const runCheck = trpc.monitor.runCheck.useMutation({
@@ -164,13 +165,23 @@ export default function Home() {
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <TrendingDown className="w-4 h-4" />
-                發現特價票
+                發現篩選器的票
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-amber-600">
                 {statsLoading ? "..." : stats?.totalDealsFound || 0}
               </div>
+              {dealsByFilter && Object.keys(dealsByFilter).length > 0 && (
+                <div className="mt-2 space-y-1">
+                  {Object.entries(dealsByFilter).map(([miles, count]) => (
+                    <div key={miles} className="text-xs text-muted-foreground flex justify-between">
+                      <span>{Number(miles) / 1000}k:</span>
+                      <span className="font-semibold">{count}張</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 

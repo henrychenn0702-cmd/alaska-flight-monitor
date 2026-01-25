@@ -74,6 +74,8 @@ export const notifications = mysqlTable("notifications", {
   content: text("content").notNull(),
   /** Flight dates that triggered this notification */
   flightDates: text("flightDates").notNull(),
+  /** Filter details as JSON mapping filter miles to count */
+  filterDetails: text("filterDetails").notNull(),
   /** Whether notification was sent successfully (1 = true, 0 = false) */
   sent: int("sent").default(0).notNull(),
   /** Timestamp when notification was sent */

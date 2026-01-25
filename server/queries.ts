@@ -107,6 +107,41 @@ export async function getPriceHistory(flightDate: string) {
 }
 
 /**
+ * Get deals found by filter from recent notifications
+ */
+export async function getDealsByFilter() {
+  const db = await getDb();
+  if (!db) return {};
+
+  try {
+    const recentNotifications = await db
+      .select()
+      .from(notifications)
+      .orderBy(desc(notifications.sentAt))
+      .limit(10);
+
+    const filterTotals: Record<number, number> = {};
+
+    for (const notification of recentNotifications) {
+      try {
+        const details = JSON.parse(notification.filterDetails || "{}");
+        for (const [miles, count] of Object.entries(details)) {
+          const milesNum = Number(miles);
+          filterTotals[milesNum] = (filterTotals[milesNum] || 0) + Number(count);
+        }
+      } catch (e) {
+        // Skip invalid JSON
+      }
+    }
+
+    return filterTotals;
+  } catch (error) {
+    console.error("[Queries] Failed to get deals by filter:", error);
+    return {};
+  }
+}
+
+/**
  * Get monitoring statistics
  */
 export async function getMonitorStats() {

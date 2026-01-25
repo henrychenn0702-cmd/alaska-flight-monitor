@@ -234,6 +234,15 @@ export async function checkForDeals(
         // For now, we just log that we would send them
       }
 
+      // Build filter details JSON
+      const filterDetails: Record<number, number> = {};
+      for (const filter of activeFilters) {
+        const dates = dealsByFilter[filter.targetMiles];
+        if (dates && dates.length > 0) {
+          filterDetails[filter.targetMiles] = dates.length;
+        }
+      }
+
       // Save notification record
       const db = await getDb();
       if (db) {
@@ -241,6 +250,7 @@ export async function checkForDeals(
           title,
           content,
           flightDates: dealDates.join(","),
+          filterDetails: JSON.stringify(filterDetails),
           sent: ownerSuccess ? 1 : 0,
         });
       }

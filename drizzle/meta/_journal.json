@@ -29,6 +29,20 @@
       "when": 1769380303172,
       "tag": "0003_sticky_dazzler",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1769380928144,
+      "tag": "0004_simple_maginty",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1769380980128,
+      "tag": "0005_faithful_hiroim",
+      "breakpoints": true
     }
   ]
 }

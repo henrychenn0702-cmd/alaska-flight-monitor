@@ -37,6 +37,11 @@ export const appRouter = router({
       return await getMonitorStats();
     }),
 
+    getDealsByFilter: publicProcedure.query(async () => {
+      const { getDealsByFilter } = await import("./queries");
+      return await getDealsByFilter();
+    }),
+
     runCheck: publicProcedure.mutation(async () => {
       const { runMonitoring } = await import("./monitorService");
       return await runMonitoring();
