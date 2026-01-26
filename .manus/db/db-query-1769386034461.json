@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE filterSettings SET active = 1 WHERE targetMiles = 175000;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3RcjQK3f9PNfQU8.root --database YYJrq5YYBnXyKpvYp98pxA --execute UPDATE filterSettings SET active = 1 WHERE targetMiles = 175000;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 352
+}

@@ -8,6 +8,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { startScheduler } from "../scheduler";
+import { initializeEmailService } from "../emailService";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -60,6 +61,15 @@ async function startServer() {
 
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
+    
+    // Initialize email service
+    const sendgridApiKey = process.env.SENDGRID_API_KEY;
+    if (sendgridApiKey) {
+      initializeEmailService(sendgridApiKey);
+    } else {
+      console.warn("[Server] SENDGRID_API_KEY not set, email notifications will be disabled");
+    }
+    
     // Start the monitoring scheduler
     startScheduler();
   });

@@ -70,3 +70,11 @@
 - [x] 檢查監控邏輯的價格比對是否正確
 - [x] 修改checkForDeals邏輯以立即觸發通知
 - [x] 測試175k篩選器是否能正確檢測並通知
+
+
+## Email發送功能 (緊急)
+- [x] 安裝Nodemailer套件
+- [x] 建立email發送服務模組
+- [x] 設定SMTP配置(使用Gmail或其他服務)
+- [x] 更新monitorService以實際發送email
+- [x] 測試email發送功能

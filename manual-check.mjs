@@ -1,6 +1,20 @@
 import { runMonitoring } from "./server/monitorService.js";
+import { initializeEmailService } from "./server/emailService.js";
+import dotenv from "dotenv";
+
+// Load environment variables
+dotenv.config();
 
 console.log("=== Manual Monitoring Check ===\n");
+
+// Initialize email service
+const sendgridApiKey = process.env.SENDGRID_API_KEY;
+if (sendgridApiKey) {
+  initializeEmailService(sendgridApiKey);
+  console.log("[Manual Check] Email service initialized\n");
+} else {
+  console.warn("[Manual Check] SENDGRID_API_KEY not set, email notifications will be disabled\n");
+}
 
 try {
   const result = await runMonitoring();

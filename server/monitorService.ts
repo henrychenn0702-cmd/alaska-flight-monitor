@@ -3,6 +3,7 @@ import * as cheerio from "cheerio";
 import { getDb } from "./db";
 import { priceRecords, monitorLogs, notifications } from "../drizzle/schema";
 import { notifyOwner } from "./_core/notification";
+import { sendDealNotification } from "./emailService";
 import { getActiveFilters } from "./filterService";
 import { getActiveRecipients } from "./recipientService";
 
@@ -248,12 +249,47 @@ export async function checkForDeals(
         `[MonitorService] Found ${recipients.length} active email recipients`
       );
 
+      // Send emails to all recipients
       if (recipients.length > 0) {
         console.log(
-          `[MonitorService] Would send email to: ${recipients.join(", ")}`
+          `[MonitorService] Sending emails to: ${recipients.join(", ")}`
         );
-        // In a real implementation, you would send emails to each recipient here
-        // For now, we just log that we would send them
+        
+        for (const recipientEmail of recipients) {
+          // Send email for each active filter that found deals
+          for (const filter of activeFilters) {
+            const dates = dealsByFilter[filter.targetMiles];
+            if (dates && dates.length > 0) {
+              // Get deal details for this filter
+              const deals = prices.filter(
+                (p) => p.miles === filter.targetMiles && dates.includes(p.date)
+              );
+              
+              try {
+                const emailSent = await sendDealNotification(
+                  recipientEmail,
+                  deals,
+                  filter.targetMiles
+                );
+                
+                if (emailSent) {
+                  console.log(
+                    `[MonitorService] Email sent to ${recipientEmail} for ${filter.targetMiles / 1000}k filter`
+                  );
+                } else {
+                  console.warn(
+                    `[MonitorService] Failed to send email to ${recipientEmail}`
+                  );
+                }
+              } catch (error) {
+                console.error(
+                  `[MonitorService] Error sending email to ${recipientEmail}:`,
+                  error
+                );
+              }
+            }
+          }
+        }
       }
 
       // Build filter details JSON
