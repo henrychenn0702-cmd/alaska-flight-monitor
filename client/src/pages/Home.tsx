@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Plane, RefreshCw, Calendar, TrendingDown, Bell, Activity, CheckCircle2, XCircle, Sparkles, Sliders, Mail } from "lucide-react";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 
 export default function Home() {
@@ -20,6 +20,18 @@ export default function Home() {
   const { data: logs, isLoading: logsLoading } = trpc.monitor.getRecentLogs.useQuery();
   const { data: notifications } = trpc.monitor.getNotifications.useQuery();
   const { data: dealsByFilter } = trpc.monitor.getDealsByFilter.useQuery();
+
+  // Auto-refresh every 15 minutes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      utils.monitor.getStats.invalidate();
+      utils.monitor.getLatestPrices.invalidate();
+      utils.monitor.getRecentLogs.invalidate();
+      utils.monitor.getNotifications.invalidate();
+      utils.monitor.getDealsByFilter.invalidate();
+    }, 15 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [utils]);
 
   // Manual check mutation
   const runCheck = trpc.monitor.runCheck.useMutation({
