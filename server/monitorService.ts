@@ -19,22 +19,33 @@ interface FlightPrice {
 /**
  * Fetch and parse Alaska Airlines award calendar page
  * Tries multiple parsing strategies to handle dynamic content
+ * Includes retry logic and timeout handling
  */
 export async function fetchFlightPrices(): Promise<FlightPrice[]> {
-  try {
-    console.log("[MonitorService] Fetching Alaska Airlines calendar...");
+  const MAX_RETRIES = 3;
+  const TIMEOUT_MS = 10000; // 10 seconds
+  
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      console.log(`[MonitorService] Fetching Alaska Airlines calendar (attempt ${attempt}/${MAX_RETRIES})...`);
 
-    const response = await axios.get(ALASKA_URL, {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        Accept:
-          "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.5",
-        "Cache-Control": "no-cache",
-      },
-      timeout: 30000,
-    });
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+      const response = await axios.get(ALASKA_URL, {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          Accept:
+            "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+          "Accept-Language": "en-US,en;q=0.5",
+          "Cache-Control": "no-cache",
+        },
+        timeout: TIMEOUT_MS,
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
 
     const $ = cheerio.load(response.data);
     const prices: FlightPrice[] = [];
@@ -150,21 +161,28 @@ export async function fetchFlightPrices(): Promise<FlightPrice[]> {
       });
     }
 
-    console.log(`[MonitorService] Extracted ${prices.length} flight prices`);
+      console.log(`[MonitorService] Extracted ${prices.length} flight prices`);
 
-    // Log sample prices for debugging
-    if (prices.length > 0) {
-      console.log(
-        "[MonitorService] Sample prices:",
-        prices.slice(0, 3).map((p) => `${p.date}: ${p.miles / 1000}k`)
-      );
+      // Log sample prices for debugging
+      if (prices.length > 0) {
+        console.log(
+          "[MonitorService] Sample prices:",
+          prices.slice(0, 3).map((p) => `${p.date}: ${p.miles / 1000}k`)
+        );
+      }
+
+      return prices;
+    } catch (error) {
+      if (attempt === MAX_RETRIES) {
+        console.error(`[MonitorService] Failed to fetch prices after ${MAX_RETRIES} attempts:`, error instanceof Error ? error.message : error);
+        return []; // Return empty array instead of throwing
+      }
+      console.warn(`[MonitorService] Attempt ${attempt} failed, retrying in 2 seconds...`);
+      await new Promise(resolve => setTimeout(resolve, 2000));
     }
-
-    return prices;
-  } catch (error) {
-    console.error("[MonitorService] Failed to fetch prices:", error);
-    throw error;
   }
+  
+  return [];
 }
 
 /**

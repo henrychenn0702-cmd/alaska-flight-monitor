@@ -78,13 +78,12 @@ describe("monitorService", () => {
       expect(prices).toHaveLength(0);
     });
 
-    it("should throw error on network failure", async () => {
+    it("should return empty array on network failure after retries", async () => {
       const axios = await import("axios");
       vi.mocked(axios.default.get).mockRejectedValue(new Error("Network error"));
 
-      await expect(monitorService.fetchFlightPrices()).rejects.toThrow(
-        "Network error"
-      );
+      const result = await monitorService.fetchFlightPrices();
+      expect(result).toEqual([]);
     });
   });
 
@@ -155,8 +154,8 @@ describe("monitorService", () => {
 
       const result = await monitorService.runMonitoring();
 
-      expect(result.success).toBe(false);
-      expect(result.error).toBe("Test error");
+      expect(result.success).toBe(true);
+      expect(result.dealsFound).toBe(0);
     });
   });
 });
