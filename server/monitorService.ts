@@ -23,14 +23,11 @@ interface FlightPrice {
  */
 export async function fetchFlightPrices(): Promise<FlightPrice[]> {
   const MAX_RETRIES = 3;
-  const TIMEOUT_MS = 10000; // 10 seconds
+  const TIMEOUT_MS = 20000; // 20 seconds (increased from 10)
   
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       console.log(`[MonitorService] Fetching Alaska Airlines calendar (attempt ${attempt}/${MAX_RETRIES})...`);
-
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
       const response = await axios.get(ALASKA_URL, {
         headers: {
@@ -42,10 +39,7 @@ export async function fetchFlightPrices(): Promise<FlightPrice[]> {
           "Cache-Control": "no-cache",
         },
         timeout: TIMEOUT_MS,
-        signal: controller.signal,
       });
-      
-      clearTimeout(timeoutId);
 
     const $ = cheerio.load(response.data);
     const prices: FlightPrice[] = [];

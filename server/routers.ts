@@ -46,6 +46,11 @@ export const appRouter = router({
       const { runMonitoring } = await import("./monitorService");
       return await runMonitoring();
     }),
+
+    getSchedulerStatus: publicProcedure.query(async () => {
+      const { getSchedulerStatus } = await import("./scheduler");
+      return getSchedulerStatus();
+    }),
   }),
 
   recipients: router({
