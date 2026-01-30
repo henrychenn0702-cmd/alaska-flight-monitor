@@ -103,3 +103,11 @@
 - [x] 添加詳細的scheduler執行日誌記錄
 - [x] 添加scheduler健康檢查API
 - [x] 確保每15分鐘都有新的監控日誌記錄
+
+
+## Scheduler 自動重啟機制 (新功能)
+- [x] 實現 watchdog 機制定期檢查 scheduler 是否運行
+- [x] 如果 scheduler 停止則自動重啟
+- [x] 添加重啟日誌記錄
+- [x] 測試異常情況下的自動恢複
+- [x] 確保 scheduler 永不停止
