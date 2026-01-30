@@ -183,23 +183,38 @@ export async function fetchFlightPrices(): Promise<FlightPrice[]> {
  * Save price records to database
  */
 export async function savePriceRecords(prices: FlightPrice[]): Promise<void> {
+  if (prices.length === 0) {
+    console.log("[MonitorService] No prices to save");
+    return;
+  }
+
   const db = await getDb();
   if (!db) {
-    console.warn("[MonitorService] Database not available");
+    console.warn("[MonitorService] Database not available - cannot save price records");
     return;
   }
 
   try {
+    console.log(`[MonitorService] Saving ${prices.length} price records to database...`);
+    let savedCount = 0;
+    
     for (const price of prices) {
-      await db.insert(priceRecords).values({
-        flightDate: price.date,
-        miles: price.miles,
-        fees: price.fees,
-      });
+      try {
+        await db.insert(priceRecords).values({
+          flightDate: price.date,
+          miles: price.miles,
+          fees: price.fees,
+        });
+        savedCount++;
+      } catch (itemError) {
+        const msg = itemError instanceof Error ? itemError.message : String(itemError);
+        console.warn(`[MonitorService] Failed to save ${price.date}: ${msg}`);
+      }
     }
+    
+    console.log(`[MonitorService] Saved ${savedCount}/${prices.length} price records`);
   } catch (error) {
     console.error("[MonitorService] Failed to save price records:", error);
-    throw error;
   }
 }
 
