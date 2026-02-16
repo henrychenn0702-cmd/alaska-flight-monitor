@@ -106,7 +106,7 @@ export default function Home() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">阿拉斯加航空里程票監控系統</h1>
-                <p className="text-sm text-muted-foreground">SEA → TPE · 2026年2月 · Partner Business</p>
+                <p className="text-sm text-muted-foreground">TPE → SEA · 2026年3月 · Partner Business</p>
               </div>
             </div>
             <div className="flex gap-3">

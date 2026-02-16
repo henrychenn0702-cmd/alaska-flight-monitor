@@ -8,7 +8,7 @@ import { getActiveFilters } from "./filterService";
 import { getActiveRecipients } from "./recipientService";
 
 const ALASKA_URL =
-  "https://www.alaskaair.com/search/calendar?O=SA2&D=TPE&OD=2026-02-01&A=1&RT=false&RequestType=Calendar&int=flightresultsmicrosite%3Aviewby-calendar&locale=en-us&ShoppingMethod=onlineaward&FareType=Partner+Business&CM=2026-02&DD=2026-02-01";
+  "https://www.alaskaair.com/search/calendar?O=TPE&D=SEA&OD=2026-03-01&A=1&RT=false&RequestType=Calendar&ShoppingMethod=onlineaward&int=flightresultsmicrosite%3Aviewby-calendar&locale=en-us&FareType=Partner+Business";
 
 interface FlightPrice {
   date: string;
@@ -48,7 +48,7 @@ export async function fetchFlightPrices(): Promise<FlightPrice[]> {
     console.log("[MonitorService] Parsing from SvelteKit data...");
     const scriptContent = response.data;
     
-    // Look for pattern: date:"2026-02-01",price:18.1,awardPoints:175000
+    // Look for pattern: date:"2026-03-01",price:18.1,awardPoints:175000
     const dataMatches = scriptContent.matchAll(/date:"([^"]+)",price:([\d.]+|null),awardPoints:(\d+|null)/g);
     
     for (const match of dataMatches) {
